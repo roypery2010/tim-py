@@ -2,15 +2,21 @@ from enum import Enum
 import pickle
 
 class Inst_Set(Enum):
-    INST_PUSH = 1
-    INST_POP = 2
-    INST_DUP = 3
-    INST_SWAP = 4
-    INST_ADD = 5
-    INST_SUB = 6
-    INST_MUL = 7
-    INST_DIV = 8
-    INST_PRINT = 9
+    INST_PUSH = 0
+    INST_POP = 1
+    INST_DUP = 2
+    INST_SWAP = 3
+    INST_ADD = 4
+    INST_SUB = 5
+    INST_MUL = 6
+    INST_DIV = 7
+    INST_CMPE = 8
+    INST_CMPNE = 9
+    INST_CMPG = 10
+    INST_CMPL = 11
+    INST_CJMP = 12
+    INST_JMP  = 13
+    INST_PRINT = 14
 
 class Inst:
     def __init__(self, inst_type, val=0):
@@ -33,6 +39,18 @@ def DEF_INST_MUL():
     return Inst(Inst_Set.INST_MUL)
 def DEF_INST_DIV():
     return Inst(Inst_Set.INST_DIV)
+def DEF_INST_CMPE():
+    return Inst(Inst_Set.INST_CMPE)
+def DEF_INST_CMPNE():
+    return Inst(Inst_Set.INST_CMPNE)
+def DEF_INST_CMPG():
+    return Inst(Inst_Set.INST_CMPG)
+def DEF_INST_CMPL():
+    return Inst(Inst_Set.INST_CMPL)
+def DEF_INST_JMP(x):
+    return Inst(Inst_Set.INST_JMP, x)
+def DEF_INST_CJMP(x):
+    return Inst(Inst_Set.INST_CJMP, x)
 def DEF_INST_PRINT():
     return Inst(Inst_Set.INST_PRINT)
 
@@ -52,7 +70,8 @@ class Machine:
             raise RuntimeError("ERROR: Stack Underflow")
         return self.stack.pop()
     def run(self):
-        for inst in self.instructions:
+        for ip in range(len(self.instructions)):
+            inst = self.instructions[ip]
             match inst.inst_type:
                 case Inst_Set.INST_PUSH:
                     self.push(inst.val)
@@ -85,6 +104,57 @@ class Machine:
                     if (b == 0):
                         raise RuntimeError("ERROR: Cannot divide by zero\n")
                     self.push(a // b)
+                case Inst_Set.INST_CMPE:
+                    a = self.pop()
+                    b = self.pop()
+                    self.push(a)
+                    self.push(b)
+                    if (a == b):
+                        self.push(1)
+                    else:
+                        self.push(0)
+                case Inst_Set.INST_CMPNE:
+                    a = self.pop()
+                    b = self.pop()
+                    self.push(a)
+                    self.push(b)
+                    if (a != b):
+                        self.push(1)
+                    else:
+                        self.push(0)
+                case Inst_Set.INST_CMPG:
+                    a = self.pop()
+                    b = self.pop()
+                    self.push(a)
+                    self.push(b)
+                    if (a > b):
+                        self.push(1)
+                    else:
+                        self.push(0)
+                case Inst_Set.INST_CMPL:
+                    a = self.pop()
+                    b = self.pop()
+                    self.push(a)
+                    self.push(b)
+                    if (a < b):
+                        self.push(1)
+                    else:
+                        self.push(0)
+                case Inst_Set.INST_CJMP:
+                    a = self.pop()
+                    if (a == 1):
+                        ip = inst.val - 1
+                        print("IP: %d\n", ip)
+                        if (ip + 1 >= len(self.instructions)):
+                            print("CJMP ERROR\n")
+                            raise RuntimeError("ERROR: Cannot jump out of bounds\n")
+                    else:
+                        continue
+                case Inst_Set.INST_JMP:
+                    ip = inst.val - 1
+                    if (ip + 1 >= len(self.instructions)):
+                            print("JMP ERROR\n")
+                            raise RuntimeError("ERROR: Cannot jump out of bounds\n")
                 case Inst_Set.INST_PRINT:
                     a = self.pop()
                     print(a)
@@ -93,13 +163,12 @@ class Machine:
 program = [
     DEF_INST_PUSH(1),
     DEF_INST_PUSH(2),
-    DEF_INST_PUSH(3),
-    DEF_INST_PUSH(4),
-    DEF_INST_PUSH(5),
-    DEF_INST_SWAP(),
+    DEF_INST_CMPE(),
+    DEF_INST_CJMP(10),
+    DEF_INST_PUSH(2),
     DEF_INST_ADD(),
-    DEF_INST_SWAP(),
-    DEF_INST_PRINT()
+    DEF_INST_PUSH(4),
+    DEF_INST_PRINT(),
 ] 
 PROGRAM_SIZE = len(program)
 
