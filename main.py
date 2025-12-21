@@ -19,9 +19,10 @@ class Inst_Set(Enum):
     INST_CMPL = 14
     INST_CMPGE = 15
     INST_CMPLE = 16
-    INST_CJMP = 17
-    INST_JMP  = 18
-    INST_PRINT = 19
+    INST_JMP = 17
+    INST_ZJMP  = 18
+    INST_NZJMP = 19
+    INST_PRINT = 20
 
 class Inst:
     def __init__(self, inst_type, val=0):
@@ -64,8 +65,10 @@ def DEF_INST_CMPLE():
     return Inst(Inst_Set.INST_CMPLE)
 def DEF_INST_JMP(x):
     return Inst(Inst_Set.INST_JMP, x)
-def DEF_INST_CJMP(x):
-    return Inst(Inst_Set.INST_CJMP, x)
+def DEF_INST_ZJMP(x):
+    return Inst(Inst_Set.INST_ZJMP, x)
+def DEF_INST_NZJMP(x):
+    return Inst(Inst_Set.INST_NZJMP, x)
 def DEF_INST_PRINT():
     return Inst(Inst_Set.INST_PRINT)
 
@@ -179,20 +182,24 @@ class Machine:
                         self.push(1)
                     else:
                         self.push(0)
-                case Inst_Set.INST_CJMP:
-                    a = self.pop()
-                    if (a == 1):
-                        ip = inst.val - 1
-                        print("IP: %d\n", ip)
-                        if (ip + 1 >= len(self.instructions)):
-                            print("CJMP ERROR\n")
-                            raise RuntimeError("ERROR: Cannot jump out of bounds\n")
-                    else:
-                        continue
                 case Inst_Set.INST_JMP:
                     ip = inst.val - 1
                     if (ip + 1 >= len(self.instructions)):
                             print("JMP ERROR\n")
+                            raise RuntimeError("ERROR: Cannot jump out of bounds\n")
+                case Inst_Set.INST_ZJMP:
+                    a = self.pop()
+                    if (a == 0):
+                        ip = inst.val - 1
+                        if (ip + 1 >= len(self.instructions)):
+                            print("ZJMP ERROR\n")
+                            raise RuntimeError("ERROR: Cannot jump out of bounds\n")
+                case Inst_Set.INST_NZJMP:
+                    a = self.pop()
+                    if (a != 0):
+                        ip = inst.val - 1
+                        if (ip + 1 >= len(self.instructions)):
+                            print("NZJMP ERROR\n")
                             raise RuntimeError("ERROR: Cannot jump out of bounds\n")
                 case Inst_Set.INST_PRINT:
                     a = self.pop()
@@ -203,10 +210,9 @@ class Machine:
 
 program = [
     DEF_INST_PUSH(14),
-    DEF_INST_PUSH(27),
-    DEF_INST_HALT(),
+    DEF_INST_PUSH(5),
+    DEF_INST_NZJMP(6),
     DEF_INST_PUSH(15),
-    DEF_INST_CMPGE(),
     DEF_INST_NOP(),
     DEF_INST_NOP(),
     DEF_INST_NOP(),
