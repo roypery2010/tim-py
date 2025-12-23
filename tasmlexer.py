@@ -1,13 +1,71 @@
 from tim_py import *
 
+MAX_TOKEN_STACK_SIZE = 1024
+
 class Token:
     def __init__(self, token_type, text, line, char):
         self.token_type = token_type
         self.text = text
         self.line = line
         self.char = char
+
+    def __str__(self):
+        return f"Token(type={self.token_type}, text={self.text!r}, line={self.line}, char={self.char})"
+class Lexer:
+    def __init__(self, filename):
+        self.tokens = []
+        self.filename = filename
+    def run(self):
+        self.tokens = []
+        
+
+        with open(self.filename, "r", encoding="utf-8") as f:
+            for line_num, line in enumerate(f, start=1):
+                stripped = line.strip()
+
+                # skip empty lines or comments
+                if not stripped or stripped.startswith("#"):
+                    continue
+
+                # We need to track character positions, so we scan manually
+                index = 0
+                length = len(line)
+
+                while index < length:
+                    ch = line[index]
+
+                    # skip whitespace
+                    if ch.isspace():
+                        index += 1
+                        continue
+
+                    start_col = index + 1  # 1-based column number
+
+                    # read a word (keyword or number)
+                    start = index
+                    while index < length and not line[index].isspace():
+                        index += 1
+
+                    part = line[start:index].strip().lower()
+                    if part.isdigit() or (part.startswith("-") and part[1:].isdigit()):
+                            self.tokens.append(Token(TokenType.TYPE_INT, part, line_num, start_col))
+                            continue
+                    token_type = get_token_type(part)
+                    if token_type == -1:
+                        raise ValueError(
+                                f"Unknown token '{part}' at line {line_num}, column {start_col}"
+                        )
+
+                    self.tokens.append(Token(token_type, part, line_num, start_col))
+                    
+                    # classify token
+                    
+                    
+
+        return self.tokens
         
 class TokenType(Enum):
+    TYPE_NONE = -1
     TYPE_NOP = 0
     TYPE_PUSH = 1
     TYPE_POP = 3
@@ -85,62 +143,59 @@ def get_token_type(name):
         case "halt":
             return TokenType.TYPE_HALT
         case _:
-            return -1
+            return TYPE_NONE
 
-def lexer(path):
-    tokens = []
-
-    with open(path, "r", encoding="utf-8") as f:
-        for line_num, line in enumerate(f, start=1):
-            stripped = line.strip()
-
-            # skip empty lines or comments
-            if not stripped or stripped.startswith("#"):
-                continue
-
-            # We need to track character positions, so we scan manually
-            index = 0
-            length = len(line)
-
-            while index < length:
-                ch = line[index]
-
-                # skip whitespace
-                if ch.isspace():
-                    index += 1
-                    continue
-
-                start_col = index + 1  # 1-based column number
-
-                # read a word (keyword or number)
-                start = index
-                while index < length and not line[index].isspace():
-                    index += 1
-
-                part = line[start:index].strip().lower()
-                if part.isdigit() or (part.startswith("-") and part[1:].isdigit()):
-                        tokens.append({
-                            "token_type": TokenType.TYPE_INT,
-                            "text": part,
-                            "line": line_num,
-                            "col": start_col,
-                        })
-                        continue
-                token_type = get_token_type(part)
-                if token_type == -1:
-                    raise ValueError(
-                            f"Unknown token '{part}' at line {line_num}, column {start_col}"
-                    )
-
-                tokens.append({
-                            "token_type": token_type,
-                            "text": part,
-                            "line": line_num,
-                            "col": start_col,
-                })
-                
-                # classify token
-                
-                
-
-    return tokens
+def print_token():
+    token = Token()
+    match token.token_type:
+        case TokenType.TYPE_NONE:
+            print("TYPE_NONE\n")
+        case TokenType.TYPE_NOP:
+            print("TYPE_NOP\n")
+        case TokenType.TYPE_PUSH:
+            print("TYPE_PUSH\n")
+        case TokenType.TYPE_POP:
+            print("TYPE_POP\n")
+        case TokenType.TYPE_DUP:
+            print("TYPE_DUP\n")
+        case TokenType.TYPE_INDUP:
+            print("TYPE_INDUP\n")
+        case TokenType.TYPE_SWAP:
+            print("TYPE_SWAP\n")
+        case TokenType.TYPE_INSWAP:
+            print("TYPE_INSWAP\n")
+        case TokenType.TYPE_ADD:
+            print("TYPE_ADD\n")
+        case TokenType.TYPE_SUB:
+            print("TYPE_SUB\n")
+        case TokenType.TYPE_MUL:
+            print("TYPE_MUL\n") 
+        case TokenType.TYPE_DIV:
+            print("TYPE_DIV\n") 
+        case TokenType.TYPE_MOD:
+            print("TYPE_MOD\n") 
+        case TokenType.TYPE_CMPE:
+            print("TYPE_CMPE\n") 
+        case TokenType.TYPE_CMPNE:
+            print("TYPE_CMPNE\n") 
+        case TokenType.TYPE_CMPG:
+            print("TYPE_CMPG\n") 
+        case TokenType.TYPE_CMPL:
+            print("TYPE_CMPL\n") 
+        case TokenType.TYPE_CMPGE:
+            print("TYPE_CMPGE\n") 
+        case TokenType.TYPE_CMPLE:
+            print("TYPE_CMPLE\n") 
+        case TokenType.TYPE_JMP:
+            print("TYPE_JMP\n") 
+        case TokenType.TYPE_ZJMP:
+            print("TYPE_ZJMP\n")  
+        case TokenType.TYPE_NZJMP:
+            print("TYPE_NZJMP\n") 
+        case TokenType.TYPE_PRINT:
+            print("TYPE_PRINT\n") 
+        case TokenType.TYPE_INT:
+            print("TYPE_INT\n") 
+        case TokenType.TYPE_HALT:
+            print("TYPE_HALT\n")
+    print("text: %s, line: %s, char: %s\n", token.text, token.line, token.char)

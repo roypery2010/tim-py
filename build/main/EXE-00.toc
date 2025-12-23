@@ -32,8 +32,9 @@
    '/home/royp/tim-py/.venv/lib/python3.14/site-packages/PyInstaller/hooks/rthooks/pyi_rth_inspect.py',
    'PYSOURCE'),
   ('main', '/home/royp/tim-py/main.py', 'PYSOURCE'),
+  ('time', '/home/royp/tim-py/time.py', 'PYSOURCE'),
   ('libpython3.14.so.1.0',
-   '/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0',
+   '/lib/x86_64-linux-gnu/libpython3.14.so.1.0',
    'BINARY'),
   ('python3.14/lib-dynload/_decimal.cpython-314-x86_64-linux-gnu.so',
    '/usr/lib/python3.14/lib-dynload/_decimal.cpython-314-x86_64-linux-gnu.so',
@@ -93,8 +94,8 @@
  [],
  False,
  False,
- 1766305692,
+ 1766415373,
  [('run',
    '/home/royp/tim-py/.venv/lib/python3.14/site-packages/PyInstaller/bootloader/Linux-64bit-intel/run',
    'EXECUTABLE')],
- '/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0')
+ '/lib/x86_64-linux-gnu/libpython3.14.so.1.0')

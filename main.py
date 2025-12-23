@@ -14,7 +14,8 @@ program = [
     
 
 def main():
-    tokens = lexer("test.tasm-py")
+    lexer = Lexer("test.tasm-py")
+    tokens = lexer.run()
     for token in tokens:
         print(token)
     #machine = Machine(insts)

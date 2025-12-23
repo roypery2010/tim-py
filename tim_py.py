@@ -32,6 +32,9 @@ class Inst:
     def __init__(self, inst_type, val=0):
         self.inst_type = inst_type      # instance attribute
         self.val = val
+    def __str__(self):
+        return f"Inst(type={self.inst_type}, val={self.val})"
+
 
 def DEF_INST_PUSH(x):
     return Inst(Inst_Set.INST_PUSH, x)
@@ -79,6 +82,7 @@ def DEF_INST_NZJMP(x):
     return Inst(Inst_Set.INST_NZJMP, x)
 def DEF_INST_PRINT():
     return Inst(Inst_Set.INST_PRINT)
+
 
 MAX_STACK_SIZE = 1024
 
@@ -213,21 +217,21 @@ class Machine:
                     else:
                         self.push(0)
                 case Inst_Set.INST_JMP:
-                    ip = inst.val - 1
+                    ip = inst.val
                     if (ip + 1 >= len(self.instructions)):
                             print("JMP ERROR\n")
                             raise RuntimeError("ERROR: Cannot jump out of bounds\n")
                 case Inst_Set.INST_ZJMP:
                     a = self.pop()
                     if (a == 0):
-                        ip = inst.val - 1
+                        ip = inst.val
                         if (ip + 1 >= len(self.instructions)):
                             print("ZJMP ERROR\n")
                             raise RuntimeError("ERROR: Cannot jump out of bounds\n")
                 case Inst_Set.INST_NZJMP:
                     a = self.pop()
                     if (a != 0):
-                        ip = inst.val - 1
+                        ip = inst.val
                         if (ip + 1 >= len(self.instructions)):
                             print("NZJMP ERROR\n")
                             raise RuntimeError("ERROR: Cannot jump out of bounds\n")
@@ -236,6 +240,7 @@ class Machine:
                     print(a)
                 case Inst_Set.INST_HALT:
                     break
+                    
         self.print_stack()
 
 def write_program_to_file(file_path, prog):
