@@ -9,6 +9,14 @@ class Token:
         self.text = text
         self.line = line
         self.char = char
+    def val(self):
+        match self.token_type:
+            case TokenType.TYPE_INT:
+                return int(self.text)
+            case TokenType.TYPE_FLOAT:
+                return float(self.text)
+            case _:
+                raise ValueError(f"Not a number {self.text}")
 
     def __str__(self):
         return f"Token(type={self.token_type}, text={self.text!r}, line={self.line}, char={self.char})"
@@ -41,6 +49,7 @@ class TokenType(Enum):
     TYPE_HALT = 24
     TYPE_LABEL = 25
     TYPE_LABEL_DEF = 26
+    TYPE_FLOAT = 27
 
 def get_token_type(name):
     match name:
@@ -68,6 +77,19 @@ def get_token_type(name):
         case "print": return TokenType.TYPE_PRINT
         case "halt": return TokenType.TYPE_HALT
         case _: return TokenType.TYPE_NONE
+
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
 
 class Lexer:
     def __init__(self, filename):
@@ -102,11 +124,14 @@ class Lexer:
                     if part.endswith(":") and part[:-1].isidentifier():
                         self.tokens.append(Token(TokenType.TYPE_LABEL_DEF, part[:-1], line_num, start_col))
                         continue
-
-                    # INT
-                    if part.isdigit() or (part.startswith("-") and part[1:].isdigit()):
+                    
+                    if is_float(part):
+                        self.tokens.append(Token(TokenType.TYPE_FLOAT, part, line_num, start_col))
+                        continue
+                    if is_int(part):
                         self.tokens.append(Token(TokenType.TYPE_INT, part, line_num, start_col))
                         continue
+                        
 
                     # KEYWORD OR LABEL REF
                     token_type = get_token_type(part)

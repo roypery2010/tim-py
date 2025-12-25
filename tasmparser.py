@@ -38,7 +38,8 @@ class Parser:
                     
                 case TokenType.TYPE_PUSH:
                     i += 1
-                    val = int(self.tokens[i].text)
+                    
+                    val = self.tokens[i].val()
                     program.append(DEF_INST_PUSH(val))
                     
 
