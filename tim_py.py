@@ -1,6 +1,5 @@
 from enum import Enum
 import pickle
-
 from tasmlexer import *
 
 class Inst_Set(Enum):
