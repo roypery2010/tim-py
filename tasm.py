@@ -1,25 +1,24 @@
-from tasmlexer import *
-from tim_py import *
-from tasmparser import *
+from tasmlexer import Lexer
+from tasmparser import Parser
+from tim_py import write_program_to_file
+
 import sys
 
+def convert(path):
+    # Lex
+    tokens = Lexer(path).run()
 
-def main():
-    argc = len(sys.argv)
-    argv = sys.argv
-    if (argc < 2):
-        raise RuntimeError("Usage: %s <file_name.tasm-py>\n", argv[0])
-    file_name = argv[1]
-    lexer = Lexer(file_name)
-    tokens = lexer.run()
-    for token in tokens:
-        print(token)
-    parser = Parser(tokens)
-    program = parser.generate_instructions()
-    for inst in program:
-        print(inst)
-    machine = Machine(program)
-    machine.run()
-    write_program_to_file("machine.tim-py", program)
-    
-main()
+    # Parse → TIM instruction objects
+    insts = Parser(tokens).generate_instructions()
+
+    # Write .tim file (pickle format)
+    out = path.replace(".tasm", ".tim")
+    write_program_to_file(out, insts)
+
+    print(f"Converted {path} → {out}")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python tasm.py file.tasm")
+        sys.exit(1)
+    convert(sys.argv[1])
