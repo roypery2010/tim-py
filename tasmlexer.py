@@ -1,4 +1,5 @@
 from tim_py import *
+from enum import Enum
 
 MAX_TOKEN_STACK_SIZE = 1024
 
@@ -11,59 +12,7 @@ class Token:
 
     def __str__(self):
         return f"Token(type={self.token_type}, text={self.text!r}, line={self.line}, char={self.char})"
-class Lexer:
-    def __init__(self, filename):
-        self.tokens = []
-        self.filename = filename
-    def run(self):
-        self.tokens = []
-        
 
-        with open(self.filename, "r", encoding="utf-8") as f:
-            for line_num, line in enumerate(f, start=1):
-                stripped = line.strip()
-
-                # skip empty lines or comments
-                if not stripped or stripped.startswith("#"):
-                    continue
-
-                # We need to track character positions, so we scan manually
-                index = 0
-                length = len(line)
-
-                while index < length:
-                    ch = line[index]
-
-                    # skip whitespace
-                    if ch.isspace():
-                        index += 1
-                        continue
-
-                    start_col = index + 1  # 1-based column number
-
-                    # read a word (keyword or number)
-                    start = index
-                    while index < length and not line[index].isspace():
-                        index += 1
-
-                    part = line[start:index].strip().lower()
-                    if part.isdigit() or (part.startswith("-") and part[1:].isdigit()):
-                            self.tokens.append(Token(TokenType.TYPE_INT, part, line_num, start_col))
-                            continue
-                    token_type = get_token_type(part)
-                    if token_type == -1:
-                        raise ValueError(
-                                f"Unknown token '{part}' at line {line_num}, column {start_col}"
-                        )
-
-                    self.tokens.append(Token(token_type, part, line_num, start_col))
-                    
-                    # classify token
-                    
-                    
-
-        return self.tokens
-        
 class TokenType(Enum):
     TYPE_NONE = -1
     TYPE_NOP = 0
@@ -90,112 +39,84 @@ class TokenType(Enum):
     TYPE_PRINT = 22
     TYPE_INT = 23
     TYPE_HALT = 24
-
+    TYPE_LABEL = 25
+    TYPE_LABEL_DEF = 26
 
 def get_token_type(name):
     match name:
-        case "nop":
-            return TokenType.TYPE_NOP
-        case "push":
-            return TokenType.TYPE_PUSH
-        case "pop":
-            return TokenType.TYPE_POP
-        case "dup":
-            return TokenType.TYPE_DUP
-        case "indup":
-            return TokenType.TYPE_INDUP
-        case "swap":
-            return TokenType.TYPE_SWAP
-        case "inswap":
-            return TokenType.TYPE_INSWAP
-        case "add":
-            return TokenType.TYPE_ADD
-        case "sub":
-            return TokenType.TYPE_SUB
-        case "mul":
-            return TokenType.TYPE_MUL
-        case "div":
-            return TokenType.TYPE_DIV
-        case "mod":
-            return TokenType.TYPE_MOD
-        case "cmpe":
-            return TokenType.TYPE_CMPE
-        case "cmpne":
-            return TokenType.TYPE_CMPNE
-        case "cmpg":
-            return TokenType.TYPE_CMPG
-        case "cmpl":
-            return TokenType.TYPE_CMPL
-        case "cmpge":
-            return TokenType.TYPE_CMPGE
-        case "cmple":
-            return TokenType.TYPE_CMPLE
-        case "jmp":
-            return TokenType.TYPE_JMP
-        case "zjmp":
-            return TokenType.TYPE_ZJMP
-        case "nzjmp":
-            return TokenType.TYPE_NZJMP
-        case "print":
-            return TokenType.TYPE_PRINT
-        case "int":
-            return TokenType.TYPE_INT
-        case "halt":
-            return TokenType.TYPE_HALT
-        case _:
-            return TYPE_NONE
+        case "nop": return TokenType.TYPE_NOP
+        case "push": return TokenType.TYPE_PUSH
+        case "pop": return TokenType.TYPE_POP
+        case "dup": return TokenType.TYPE_DUP
+        case "indup": return TokenType.TYPE_INDUP
+        case "swap": return TokenType.TYPE_SWAP
+        case "inswap": return TokenType.TYPE_INSWAP
+        case "add": return TokenType.TYPE_ADD
+        case "sub": return TokenType.TYPE_SUB
+        case "mul": return TokenType.TYPE_MUL
+        case "div": return TokenType.TYPE_DIV
+        case "mod": return TokenType.TYPE_MOD
+        case "cmpe": return TokenType.TYPE_CMPE
+        case "cmpne": return TokenType.TYPE_CMPNE
+        case "cmpg": return TokenType.TYPE_CMPG
+        case "cmpl": return TokenType.TYPE_CMPL
+        case "cmpge": return TokenType.TYPE_CMPGE
+        case "cmple": return TokenType.TYPE_CMPLE
+        case "jmp": return TokenType.TYPE_JMP
+        case "zjmp": return TokenType.TYPE_ZJMP
+        case "nzjmp": return TokenType.TYPE_NZJMP
+        case "print": return TokenType.TYPE_PRINT
+        case "halt": return TokenType.TYPE_HALT
+        case _: return TokenType.TYPE_NONE
 
-def print_token():
-    token = Token()
-    match token.token_type:
-        case TokenType.TYPE_NONE:
-            print("TYPE_NONE\n")
-        case TokenType.TYPE_NOP:
-            print("TYPE_NOP\n")
-        case TokenType.TYPE_PUSH:
-            print("TYPE_PUSH\n")
-        case TokenType.TYPE_POP:
-            print("TYPE_POP\n")
-        case TokenType.TYPE_DUP:
-            print("TYPE_DUP\n")
-        case TokenType.TYPE_INDUP:
-            print("TYPE_INDUP\n")
-        case TokenType.TYPE_SWAP:
-            print("TYPE_SWAP\n")
-        case TokenType.TYPE_INSWAP:
-            print("TYPE_INSWAP\n")
-        case TokenType.TYPE_ADD:
-            print("TYPE_ADD\n")
-        case TokenType.TYPE_SUB:
-            print("TYPE_SUB\n")
-        case TokenType.TYPE_MUL:
-            print("TYPE_MUL\n") 
-        case TokenType.TYPE_DIV:
-            print("TYPE_DIV\n") 
-        case TokenType.TYPE_MOD:
-            print("TYPE_MOD\n") 
-        case TokenType.TYPE_CMPE:
-            print("TYPE_CMPE\n") 
-        case TokenType.TYPE_CMPNE:
-            print("TYPE_CMPNE\n") 
-        case TokenType.TYPE_CMPG:
-            print("TYPE_CMPG\n") 
-        case TokenType.TYPE_CMPL:
-            print("TYPE_CMPL\n") 
-        case TokenType.TYPE_CMPGE:
-            print("TYPE_CMPGE\n") 
-        case TokenType.TYPE_CMPLE:
-            print("TYPE_CMPLE\n") 
-        case TokenType.TYPE_JMP:
-            print("TYPE_JMP\n") 
-        case TokenType.TYPE_ZJMP:
-            print("TYPE_ZJMP\n")  
-        case TokenType.TYPE_NZJMP:
-            print("TYPE_NZJMP\n") 
-        case TokenType.TYPE_PRINT:
-            print("TYPE_PRINT\n") 
-        case TokenType.TYPE_INT:
-            print("TYPE_INT\n") 
-        case TokenType.TYPE_HALT:
-            print("TYPE_HALT\n")
-    print("text: %s, line: %s, char: %s\n", token.text, token.line, token.char)
+class Lexer:
+    def __init__(self, filename):
+        self.tokens = []
+        self.filename = filename
+
+    def run(self):
+        self.tokens = []
+
+        with open(self.filename, "r", encoding="utf-8") as f:
+            for line_num, line in enumerate(f, start=1):
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+
+                index = 0
+                length = len(line)
+
+                while index < length:
+                    if line[index].isspace():
+                        index += 1
+                        continue
+
+                    start_col = index + 1
+                    start = index
+                    while index < length and not line[index].isspace():
+                        index += 1
+
+                    part = line[start:index].strip().lower()
+
+                    # LABEL DEF
+                    if part.endswith(":") and part[:-1].isidentifier():
+                        self.tokens.append(Token(TokenType.TYPE_LABEL_DEF, part[:-1], line_num, start_col))
+                        continue
+
+                    # INT
+                    if part.isdigit() or (part.startswith("-") and part[1:].isdigit()):
+                        self.tokens.append(Token(TokenType.TYPE_INT, part, line_num, start_col))
+                        continue
+
+                    # KEYWORD OR LABEL REF
+                    token_type = get_token_type(part)
+                    if token_type == TokenType.TYPE_NONE:
+                        # treat as label reference if it's identifier
+                        if part.isidentifier():
+                            self.tokens.append(Token(TokenType.TYPE_LABEL, part, line_num, start_col))
+                        else:
+                            raise ValueError(f"Unknown token '{part}' at line {line_num}, column {start_col}")
+                    else:
+                        self.tokens.append(Token(token_type, part, line_num, start_col))
+
+        return self.tokens

@@ -1,0 +1,7 @@
+jmp main
+
+main:
+	push 5
+	push 15
+	add
+	print
