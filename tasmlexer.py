@@ -9,6 +9,7 @@ class Token:
         self.text = text
         self.line = line
         self.char = char
+
     def val(self):
         match self.token_type:
             case TokenType.TYPE_INT:
@@ -50,9 +51,10 @@ class TokenType(Enum):
     TYPE_LABEL = 25
     TYPE_LABEL_DEF = 26
     TYPE_FLOAT = 27
+    TYPE_CHAR = 28  # kept for reference
 
 def get_token_type(name):
-    match name:
+    match name.lower():
         case "nop": return TokenType.TYPE_NOP
         case "push": return TokenType.TYPE_PUSH
         case "pop": return TokenType.TYPE_POP
@@ -84,12 +86,36 @@ def is_float(s):
         return True
     except ValueError:
         return False
+
 def is_int(s):
     try:
         int(s)
         return True
     except ValueError:
         return False
+
+def is_char(s):
+    """Return True if s is a single printable character or quoted char/escape."""
+    if len(s) == 1 and s.isprintable():
+        return True
+    if len(s) == 3 and s.startswith("'") and s.endswith("'"):
+        return True
+    if len(s) == 4 and s.startswith("'") and s.endswith("'") and s[1] == "\\":
+        return True
+    return False
+
+def char_to_value(s):
+    """Convert char token to numeric value for push."""
+    if len(s) == 1:
+        return ord(s)
+    if len(s) == 3 and s.startswith("'") and s.endswith("'"):
+        return ord(s[1])
+    if len(s) == 4 and s.startswith("'") and s.endswith("'") and s[1] == "\\":
+        esc_map = {'n': '\n', 't': '\t', '\\': '\\', "'": "'"}
+        if s[2] not in esc_map:
+            raise ValueError(f"Unknown escape sequence {s}")
+        return ord(esc_map[s[2]])
+    raise ValueError(f"Invalid char literal {s}")
 
 class Lexer:
     def __init__(self, filename):
@@ -101,8 +127,7 @@ class Lexer:
 
         with open(self.filename, "r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, start=1):
-                stripped = line.strip()
-                if not stripped or stripped.startswith("#"):
+                if not line.strip() or line.strip().startswith("#"):
                     continue
 
                 index = 0
@@ -113,35 +138,65 @@ class Lexer:
                         index += 1
                         continue
 
-                    start_col = index + 1
+                    start_col = index
                     start = index
+
                     while index < length and not line[index].isspace():
                         index += 1
 
-                    part = line[start:index].strip().lower()
+                    part = line[start:index].strip()
 
                     # LABEL DEF
                     if part.endswith(":") and part[:-1].isidentifier():
                         self.tokens.append(Token(TokenType.TYPE_LABEL_DEF, part[:-1], line_num, start_col))
                         continue
-                    
+
+                    # KEYWORD
+                    token_type = get_token_type(part.lower())
+                    if token_type != TokenType.TYPE_NONE:
+                        self.tokens.append(Token(token_type, part, line_num, start_col))
+
+                        # Special handling: push argument
+                        if token_type == TokenType.TYPE_PUSH:
+                            # Skip whitespace
+                            while index < length and line[index].isspace():
+                                index += 1
+                            arg_start = index
+                            arg_end = index
+                            while arg_end < length and not line[arg_end].isspace():
+                                arg_end += 1
+                            arg_part = line[arg_start:arg_end].strip()
+                            index = arg_end
+
+                            if is_int(arg_part):
+                                self.tokens.append(Token(TokenType.TYPE_INT, arg_part, line_num, arg_start))
+                            elif is_float(arg_part):
+                                self.tokens.append(Token(TokenType.TYPE_FLOAT, arg_part, line_num, arg_start))
+                            elif is_char(arg_part):
+                                val = char_to_value(arg_part)
+                                self.tokens.append(Token(TokenType.TYPE_INT, str(val), line_num, arg_start))
+                            else:
+                                raise ValueError(f"Invalid push argument '{arg_part}' at line {line_num}, char {arg_start}")
+                        continue
+
+                    # NUMBER
                     if is_float(part):
                         self.tokens.append(Token(TokenType.TYPE_FLOAT, part, line_num, start_col))
                         continue
+
                     if is_int(part):
                         self.tokens.append(Token(TokenType.TYPE_INT, part, line_num, start_col))
                         continue
-                        
 
-                    # KEYWORD OR LABEL REF
-                    token_type = get_token_type(part)
-                    if token_type == TokenType.TYPE_NONE:
-                        # treat as label reference if it's identifier
-                        if part.isidentifier():
-                            self.tokens.append(Token(TokenType.TYPE_LABEL, part, line_num, start_col))
-                        else:
-                            raise ValueError(f"Unknown token '{part}' at line {line_num}, column {start_col}")
+                    # CHAR
+                    if is_char(part):
+                        self.tokens.append(Token(TokenType.TYPE_CHAR, part, line_num, start_col))
+                        continue
+
+                    # LABEL REFERENCE
+                    if part.isidentifier():
+                        self.tokens.append(Token(TokenType.TYPE_LABEL, part, line_num, start_col))
                     else:
-                        self.tokens.append(Token(token_type, part, line_num, start_col))
+                        raise ValueError(f"Unknown token '{part}' at line {line_num}, char {start_col}")
 
         return self.tokens
